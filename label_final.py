@@ -1,5 +1,7 @@
 ######Final Codes
 
+import os
+import shutil
 import cv2
 import numpy as np
 import math
@@ -15,7 +17,8 @@ circleout = 0
 ######### only change this part ########
 
 pathforsave = './labels' #path for save the labeled picture 
-pathforimg = './resized' #path for read the picture 
+pathforimg = './resized/' #path for read the picture 
+pathfordone = './done/'   #path for already labeled picture
 
 mid = 1.2 # for gamma level
 
@@ -47,6 +50,7 @@ def mouse_crop(event, x, y, flags, param):
         x_end, y_end = x, y
         cropping = False # cropping is finished
         
+
 def incgamma(image):
     
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -102,9 +106,6 @@ def newPhotoWithTrackbars(image,screen):
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, lower, upper)
     output = cv2.bitwise_and(inputt,inputt, mask= mask)
-
-
-
     return output
 
 savepicname = [ f for f in listdir(pathforimg) if isfile(join(pathforimg,f)) ]
@@ -123,14 +124,15 @@ for n in range(0, len(savepicname)):
     images[n] = cv2.imread( join(pathforimg,savepicname[n]) )
     inputt = images[n]
     createwindow('image')
-    wait_time = 3
+    wait_time = 3       
     originalimage = images[n]
     val=True
     createwindow('img_orj')
-    cv2.imshow('img_orj',originalimage)
+    cv2.imshow('img_orj',originalimage) 
     out_bin=1
     pval=False
     print(savepicname[n])
+    
     while(1):
         key= cv2.waitKey(wait_time)
 
@@ -148,9 +150,8 @@ for n in range(0, len(savepicname)):
             inputt=originalimage
             
         elif key == ord('k'):
-            inputt=output
-            
-            
+            inputt=output 
+    
         elif key == ord('s'):
             dim = (400,400)
             output=output*out_bin
@@ -161,10 +162,11 @@ for n in range(0, len(savepicname)):
             gray[gray>0]=255
             resized=cv2.resize(gray, dim, interpolation = cv2.INTER_AREA)
             cv2.imwrite(join(pathforsave,savepicname[n]), resized)
-            
+            shutil.move(pathforimg + savepicname[n], pathfordone + savepicname[n])
             break
         
         elif key == ord('q'):
+            shutil.move(pathforimg + savepicname[n], pathfordone + savepicname[n])
             break
         elif key == ord('e'):
             output[output>150]=255
@@ -173,7 +175,7 @@ for n in range(0, len(savepicname)):
         elif key == ord('t'):
             createwindow('imageforcrop')
  
-            temp= newPhotoWithTrackbars(originalimage,'imageforcrop')-output
+            temp= newPhotoWithTrackbars(originalimage,'imageforcrop') -output
             temp_orj=temp
             out_bin=output
             out_bin[out_bin>0]=1
@@ -183,7 +185,12 @@ for n in range(0, len(savepicname)):
             x_ce=x_end
             y_ce=y_end
             val=False
-            
+       # elif (key == ord("t")):
+         #   createwindow("Crop")
+          #  croppedImage = temp(originalimage,'imageforcrop' ) - output            
+
+
+
             while(1):
                 key2= cv2.waitKey(3)
                 output2=newPhotoWithTrackbars(temp,'imageforcrop')
@@ -199,8 +206,7 @@ for n in range(0, len(savepicname)):
                 elif key2 == ord('k'):
                     temp=output2
                 if key2 == ord('s'):
-                    dim = (400,400)
-                    circleout= output2*temp_bin
+                    circleout= output2
                     cv2.destroyWindow('imageforcrop') 
                     break
     cv2.destroyAllWindows()
